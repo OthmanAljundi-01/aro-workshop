@@ -1,0 +1,60 @@
+
+
+Links :
+
+https://learn.microsoft.com/en-us/azure/openshift/built-in-container-registry
+
+https://docs.openshift.com/container-platform/4.11/registry/configuring-registry-operator.html
+
+https://docs.openshift.com/container-platform/4.11/registry/configuring_registry_storage/configuring-registry-storage-azure-user-infrastructure.html#configuring-registry-storage-azure-user-infrastructure
+
+https://docs.openshift.com/container-platform/4.11/openshift_images/managing_images/using-image-pull-secrets.html#images-allow-pods-to-reference-images-across-projects_using-image-pull-secrets
+
+
+
+
+# Note: replace "<user>" with the identity you need to access the registry
+
+
+oc policy add-role-to-user -n openshift-image-registry registry-viewer <User>
+oc policy add-role-to-user -n openshift-image-registry registry-editor <User>
+
+
+oc get config.imageregistry.operator.openshift.io/cluster -oyaml > config-imageregistry.yaml
+
+oc patch config.imageregistry.operator.openshift.io/cluster --patch='{"spec":{"defaultRoute":true}}' --type=merge
+oc patch config.imageregistry.operator.openshift.io/cluster --patch='[{"op": "add", "path": "/spec/disableRedirect", "value": true}]' --type=json
+
+
+oc get route -n openshift-image-registry default-route
+
+
+oc get route -n openshift-image-registry default-route -o jsonpath='{.spec.host}{"\n"}'
+
+
+oc get pods -n openshift-image-registry
+
+
+IMAGEREGISTRYHOST=`oc get route -n openshift-image-registry default-route -o jsonpath='{.spec.host}'`
+
+IMAGEREGISTRYINTERNALHOST="image-registry.openshift-image-registry.svc.cluster.local:5000"
+
+docker login -u kubeadmin -p $(oc whoami -t) $IMAGEREGISTRYHOST
+
+docker pull nginx:1.8
+
+docker tag docker.io/library/nginx:1.8 $IMAGEREGISTRYHOST/openshift/nginx:1.8
+
+docker images | grep -i $IMAGEREGISTRYHOST
+
+docker push $IMAGEREGISTRYHOST/openshift/nginx:1.8
+
+
+
+oc get imagestreams -n openshift nginx
+
+oc get imagetags.image.openshift.io -n openshift nginx:1.8
+
+oc get imagestreamtags.image.openshift.io -n openshift nginx:1.8
+
+
