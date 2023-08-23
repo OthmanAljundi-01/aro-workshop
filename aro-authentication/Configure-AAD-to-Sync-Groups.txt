@@ -1,0 +1,92 @@
+
+Author : Hevellyn Gomes : RedHat
+Publisher : Othman AlJundi : Microsoft
+
+
+
+1. oauth CR
+```
+// The important piece is the 'ExtraScopes' that has the profile claim to pull the needed information.
+$ oc get oauth cluster -o yaml
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+[...]
+spec:
+identityProviders:
+[...]
+- mappingMethod: claim
+name: AAD
+openID:
+claims:
+email:
+- email
+groups:
+- groups
+name:
+- name
+preferredUsername:
+- preferred_username
+clientID: XXXXXX
+clientSecret:
+name: openid-client-secret
+extraScopes:
+- email
+- profile
+issuer: https://login.microsoftonline.com/[...]/v2.0
+type: OpenID
+```
+- The `ExtraScopes.profile` scope set in the Oauth CR, is needed when wanting to display the email of the user.
+
+
+Refer to: https://auth0.com/docs/get-started/apis/scopes/openid-connect-scopes
+
+
+
+2. In Azure side, the `Token Configuration`, for `groups` has ID, ACCESS, SAML set with `sAMAccountName`.
+
+Besides having `preferred_username`, `email`, `profile`.
+
+### Results
+```
+$ oc get users
+NAME UID FULL NAME IDENTITIESmy@email.com 4a8b525b-9571-421b-ac64-462edaf5db3c H Gomes AAD:jM7hCHyPGkjJR_wI2D0lHr1VlcoZVTZTF0S3M61rEsM
+
+
+$ oc get identity
+NAME IDP NAME IDP USER NAME USER NAME USER UID
+AAD:jM7hCHyPGkjJR_wI2D0lHr1VlcoZVTZTF0S3M61rEsM AAD jM7hCHyPGkjJR_wI2D0lHr1VlcoZVTZTF0S3M61rEsM my@email.com 4a8b525b-9571-421b-ac64-462edaf5db3c
+
+
+$ oc get groups
+NAME USERS
+9e13d624-f35a-4ce1-a0f7-c6301603f80b my@email.com
+
+
+
+- **NAME** will show up as email.
+- **GROUPS** will have a more clear formatting only with the group_id.
+- **IDP USER NAME** and **IDENTITY NAME**: Will show as random string. This is a known issue in ARO. With no workaround for the time being.
+
+
+
+### Conclusion
+As confirmed in internal conversations and also from the documentation in both Microsoft and Red Hat sides:
+- The group will be only synced into OpenShift upon user login. ( Works as designed )
+
+
+The list of claims to use to synchronize groups from the OpenID Connect provider to OpenShift Container Platform upon user login. The first non-empty claim is used.
+```https://docs.openshift.com/container-platform/4.10/authentication/identity_providers/configuring-oidc-identity-provider.html#identity-provider-oidc-CR_configuring-oidc-identity-provider
+- Groups are showing up with their Group ID instead of their name. ( Works as designed )
+
+
+The list of claims to use to synchronize groups from the OpenID Connect provider to OpenShift Container Platform upon user login. The first non-empty claim is used.
+```https://learn.microsoft.com/en-us/azure/active-directory/hybrid/how-to-connect-fed-group-claims#configure-the-azure-ad-application-registration-for-group-attributes
+- BUT, the workaround for this, is by using the sync-group-operator, although this is not supported officially by Red Hat, it is known to work effectively in customers clusters: Instructions at: https://mobb.ninja/docs/idp/az-ad-grp-sync/
+- Users are showing up with a weird username value: This is fixed by using the `ExtraScopes: profile and email` in oauth CR.
+- User removed can not login back.
+
+First thing here, is to double check if the user and the identity are indeed deleted. I know we briefly did it during last call, but I would ask to do it again more diligent.
+During my tests, this error happened whenever had my user from another IDP already logged in. So after all needed changes are made, retry the same.
+
+
