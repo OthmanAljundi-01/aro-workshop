@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exceed-limit-test
+  namespace: mynamespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: exceed-limit-app
+  template:
+    metadata:
+      labels:
+        app: exceed-limit-app
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        resources:
+          requests:
+            cpu: "2"
+            memory: "2Gi"
+          limits:
+            cpu: "10" # This exceeds the set CPU limit quota
+            memory: "10Gi" # This exceeds the set memory limit quota
