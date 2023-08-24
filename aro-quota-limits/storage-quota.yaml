@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: storage-quota
+  namespace: mynamespace
+spec:
+  hard:
+    persistentvolumeclaims: "10"      # Maximum number of PVCs
+    requests.storage: "50Gi"          # Maximum combined storage request for all PVCs
