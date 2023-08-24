@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-test-1
+  namespace: mynamespace
+data:
+  dummy: "data"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-test-2
+  namespace: mynamespace
+data:
+  dummy: "data"
