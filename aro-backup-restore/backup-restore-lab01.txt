@@ -84,13 +84,6 @@ Note : please make sure to run the commands from WSL, so you have the permission
 
 
 
-4. create namespace "lab01" :
-
-    oc create ns lab01
-	oc get ns lab01
-
-
-
 5. create different kubernetes objects inside the namespace such as deployment, route, ... etc :
 
 	oc new-project lab01
