@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memory-test-deployment
+  namespace: mynamespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: memory-test-app
+  template:
+    metadata:
+      labels:
+        app: memory-test-app
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        resources:
+          requests:
+            cpu: "1"
+            memory: "10Gi" # This exceeds the set memory request quota
+          limits:
+            cpu: "1"
+            memory: "10Gi"
