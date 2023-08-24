@@ -1,0 +1,95 @@
+1. What is Project Isolation in OpenShift?
+
+
+	OpenShift employs a multi-tenant model, where multiple users or teams can share a cluster. These tenants can be logically segregated using OpenShift "Projects", which is essentially a Kubernetes namespace with additional metadata.
+
+
+
+Project Isolation ensures that:
+
+	1.1 One project's resources (like pods) are segregated from another, so they can't see or impact each other.
+
+	1.2 Network traffic is isolated by default between projects. This means that, by default, a pod in one project can't communicate with a pod in another project.
+	
+	1.3 Resources are secured and RBAC (Role-Based Access Control) is implemented, ensuring that users can only view or modify resources in their designated projects.
+
+
+This kind of isolation is vital for security, resource management, and organizational clarity.
+
+
+
+2. lab :
+
+
+	2.1 Create Two Projects:
+
+		oc new-project project-a
+		oc new-project project-b
+
+
+	2.2 Deploy a Sample Application in Both Projects:
+
+		oc project project-a
+		oc run nginx --image=nginx --expose --port=80
+
+		oc project project-b
+		oc run nginx --image=nginx --expose --port=80
+
+
+
+	2.3 Test Network Isolation:
+
+	From a pod in project-a, try to communicate with a pod in project-b (it should fail because of network isolation).
+
+	First, get a shell to a pod in project-a:
+
+		oc project project-a
+		oc get pods
+		oc exec -it <nginx_pod_name> -- /bin/sh
+
+	From inside the pod, try curling the nginx service in project-b:
+
+		curl nginx.project-b.svc.cluster.local
+
+
+	The request should fail since, by default, projects are isolated from each other.
+
+
+3. Configure Communication Between Projects:
+
+To allow or deny communication between projects, you would modify the NetworkPolicies.
+
+Allow Communication:
+If you wish to allow project-a to communicate with project-b:
+
+
+3.1 Switch to project-b:
+
+	oc project project-b
+
+
+3.2 Create a NetworkPolicy that allows traffic from project-a:
+
+	apiVersion: networking.k8s.io/v1
+	kind: NetworkPolicy
+	metadata:
+	  name: allow-from-project-a
+	spec:
+	  ingress:
+	  - from:
+		- namespaceSelector:
+			matchLabels:
+			  name: project-a
+	  podSelector: {}
+	  policyTypes:
+	  - Ingress
+
+
+	Apply this NetworkPolicy:
+
+	oc apply -f <filename>.yaml
+
+
+
+
+
