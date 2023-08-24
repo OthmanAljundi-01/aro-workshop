@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-count-test-deployment
+  namespace: mynamespace
+spec:
+  replicas: 5 # This will try to create 5 pods
+  selector:
+    matchLabels:
+      app: pod-count-test-app
+  template:
+    metadata:
+      labels:
+        app: pod-count-test-app
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        resources:
+          requests:
+            cpu: "0.5"
+            memory: "500Mi"
+          limits:
+            cpu: "0.5"
+            memory: "500Mi"
