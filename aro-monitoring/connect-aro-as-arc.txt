@@ -64,7 +64,7 @@ Enable the monitoring extension on the connected ARC Cluster : ( Defult Log Anal
 Enable the monitoring extension on the connected ARC Cluster : ( Specific Log Analytics Workspace ) 
 
 
-	az k8s-extension create --name azuremonitor-containers --cluster-name AzureArcTest1 --resource-group AzureArcTest --cluster-type connectedClusters --extension-type Microsoft.AzureMonitor.Containers --configuration-settings logAnalyticsWorkspaceResourceID=<armResourceIdOfExistingWorkspace> --distribution openshift --debug
+	az k8s-extension create --name azuremonitor-containers --cluster-name AzureArcTest1 --resource-group AzureArcTest --cluster-type connectedClusters --extension-type Microsoft.AzureMonitor.Containers --configuration-settings logAnalyticsWorkspaceResourceID=<armResourceIdOfExistingWorkspace> --debug
 
 
 
