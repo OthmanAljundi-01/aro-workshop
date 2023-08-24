@@ -51,7 +51,3 @@ In OpenShift (and Kubernetes in general), `ResourceQuota` objects can be used to
 
 8. API Request Rate Limits (not traditionally part of ResourceQuota, but another form of limiting resources):
    - You can set limits on the rate at which API requests are made.
-
-When creating a `ResourceQuota`, it's important to select the resources that make sense for your specific use case. Remember that the primary purpose is to prevent unintentional or malicious resource exhaustion, helping to keep the cluster healthy and functional for all users.
-
-
