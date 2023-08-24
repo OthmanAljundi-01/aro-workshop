@@ -1,0 +1,113 @@
+
+
+1. Create three projects:
+
+
+	oc new-project dev-team
+	oc new-project qa-team
+	oc new-project prod-team
+
+
+2. Role-Based Access Control (RBAC):
+
+The idea here is to ensure developers can't access production resources and QA team has read-only access to production.
+
+	2.1 Create a Role in prod-team that allows read-only access:
+
+		# role-readonly.yaml
+		apiVersion: rbac.authorization.k8s.io/v1
+		kind: Role
+		metadata:
+		  name: read-only
+		  namespace: prod-team
+		rules:
+		- apiGroups: [""]
+		  resources: ["pods"]
+		  verbs: ["get", "list"]
+
+
+	2.2 Assign the role to the QA team:
+
+		oc create rolebinding qa-readonly-binding --role=read-only --user=<qa_user> -n prod-team
+
+
+3. Network Communication:
+
+	3.1 Deploy Sample Applications:
+
+		For each team, deploy a simple nginx app:
+
+			for ns in dev-team qa-team prod-team; do
+			  oc project $ns
+			  oc run nginx --image=nginx --expose --port=80
+			done
+
+
+	3.2 Isolate Communication:
+
+	Create a network policy in the prod-team namespace to deny all inbound traffic:
+
+		# deny-all.yaml
+		apiVersion: networking.k8s.io/v1
+		kind: NetworkPolicy
+		metadata:
+		  name: deny-all
+		  namespace: prod-team
+		spec:
+		  podSelector: {}
+		  policyTypes:
+		  - Ingress
+
+
+		oc apply -f deny-all.yaml -n prod-team
+
+	Now, try to access the prod nginx from dev-team or qa-team – it should fail.
+
+
+
+	3.3 Allow QA to Access Production:
+
+	Let's say for some reason you want the QA team's pods to communicate with production, but not the development team:
+
+		# allow-qa.yaml
+		apiVersion: networking.k8s.io/v1
+		kind: NetworkPolicy
+		metadata:
+		  name: allow-from-qa
+		  namespace: prod-team
+		spec:
+		  ingress:
+		  - from:
+			- namespaceSelector:
+				matchLabels:
+				  team: qa
+		  podSelector: {}
+		  policyTypes:
+		  - Ingress
+
+
+	Label the qa-team namespace and then apply the policy:
+
+		oc label namespace qa-team team=qa
+		oc apply -f allow-qa.yaml -n prod-team
+
+	Now, the QA pods should be able to access production, but development pods still cannot.
+
+4. CleanUp :
+
+	for ns in dev-team qa-team prod-team; do
+	  oc delete project $ns
+	done
+
+
+
+Conclusion:
+
+This advanced lab dived deeper into project isolation in OpenShift, particularly in terms of network policies and RBAC. Network policies provide fine-grained control over pod communication, while RBAC ensures only authorized users have access to the desired resources. Combining both these features, you can achieve a high level of isolation and security in your OpenShift environment.
+
+
+
+
+
+
+
