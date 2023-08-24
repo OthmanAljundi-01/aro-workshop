@@ -1,0 +1,75 @@
+1. Check existing ImageStreams:
+
+	oc get imagestreams
+
+
+
+2. Create an ImageStream from a file:
+
+
+
+First, you would have a YAML file, let's say nginx-is.yaml, with the following content:
+
+
+
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  name: nginx
+spec:
+  lookupPolicy:
+    local: false
+
+
+
+
+oc create -f nginx-is.yaml
+
+
+
+
+3. Describe the newly created ImageStream:
+
+	oc describe imagestream nginx
+
+
+4. Import the official NGINX image from Docker Hub into the new ImageStream:
+
+	oc import-image nginx --from=docker.io/library/nginx:latest --confirm
+
+
+5. List all ImageStreams again to verify:
+
+	oc get imagestreams
+
+
+6. Tag the imported image to a new version tag:
+
+	oc tag nginx:latest nginx:v1
+
+
+7. Trigger a new import (assuming there's an update in the source image):
+
+	oc import-image nginx
+
+
+
+8. Export the ImageStream to a file:
+
+	oc get imagestream nginx -o yaml > exported-nginx.yaml
+
+Now you would have an exported-nginx.yaml file with the ImageStream definition.
+
+
+9. Assuming you made some changes in exported-nginx.yaml, apply those changes:
+
+	oc apply -f exported-nginx.yaml
+
+
+10. Finally, once you're done testing or if you want to clean up, delete the ImageStream:
+
+	oc delete imagestream nginx
+
+
+
+
